@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+import tiles.LavaTrap;
 import tiles.MapTile;
 import tiles.MapTile.Type;
 import tiles.TrapTile;
@@ -79,11 +80,13 @@ public class MyAIController extends CarController{
 		
 		//select tile coordinate based on our state
 		if (currentState.equals(State.FINDING_KEYS)) {
-			//ISSUE. MAY END UP GOING IN CIRCLES WITHIN LAVA I THINK
 			for (Coordinate coord: listOfTiles) {
-				if (updatedMap.get(coord).isType(Type.TRAP)) {
-					TrapTile tileToInspect = (TrapTile) updatedMap.get(coord);
-					if (tileToInspect.getTrap().equals("lava")) {
+				MapTile currentTile = updatedMap.get(coord);
+				Type currentType = currentTile.getType();
+				//go to lava if it contains a key we need
+				if (currentType.equals(Type.TRAP) && ((TrapTile)currentTile).getTrap().equals("lava")) {
+					int lavaTileKey = ((LavaTrap) updatedMap.get(coord)).getKey();
+					if (lavaTileKey!=0 && !(getKeys().contains(lavaTileKey))) {
 						return coord;
 					}
 				}
