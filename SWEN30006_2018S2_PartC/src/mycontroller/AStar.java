@@ -1,7 +1,10 @@
 package mycontroller;
 
+
 import tiles.MapTile;
+import tiles.TrapTile;
 import utilities.Coordinate;
+import world.WorldSpatial;
 
 import java.util.*;
 
@@ -17,17 +20,20 @@ public class AStar {
     List<Node> closeList = new ArrayList<>();
     Node startPos;
     Node destination;
+    WorldSpatial.Direction orientation;
     private HashMap<Coordinate, MapTile> updatedMap;
-
-    public AStar(Coordinate startPos, HashMap updatedMap, Coordinate destination) {
+    private float speed;
+    public AStar(Coordinate startPos, HashMap updatedMap, Coordinate destination, WorldSpatial.Direction orientation, float speed) {
         // pass in the current position as starrPos, pass in the current updatedMap
         this.startPos.coord = startPos;
         this.destination.coord = destination;
         this.updatedMap = updatedMap;
+        this.orientation = orientation;
+        this.speed = speed;
     }
 
     /**
-     * 开始算法
+     * Start the algorithm
      */
     public void start() {
         if (updatedMap == null) return;
@@ -40,12 +46,12 @@ public class AStar {
     }
 
     /**
-     * 移动当前结点
+     * Move the current node, from open to close
      */
     private void moveNodes() {
         while (!openList.isEmpty()) {
             if (isCoordInClose(destination)) {
-                drawPath(updatedMap, destination);
+                drawPath(updatedMap, destination.coord);
                 break;
             }
             Node current = openList.poll();
@@ -55,9 +61,10 @@ public class AStar {
     }
 
     /**
-     * 在二维数组中绘制路径
+     * Store the path in listOfPathTiles
      */
-    private void drawPath(HashMap maps, Node end) {
+    public LinkedList drawPath(HashMap maps, Coordinate destination) {
+        Node end = new Node(destination.x, destination.y);
         if (end == null || maps == null) return;
         // store the path in the listOfPathTiles
         LinkedList<Coordinate> listOfPathTiles = new LinkedList<>();
@@ -67,6 +74,7 @@ public class AStar {
             listOfPathTiles.add(c);
             end = end.parent;
         }
+        return listOfPathTiles;
     }
 
     /**
@@ -75,13 +83,58 @@ public class AStar {
     private void addNeighborNodeInOpen(Node current) {
         int x = current.coord.x;
         int y = current.coord.y;
-        // 左
+        if(speed==0){
+            switch (orientation){
+                case EAST:
+                case WEST:
+                    addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
+                    addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
+                case NORTH:
+                case SOUTH:
+                    addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
+                    addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
+            }
+        }
+
+        else{
+            switch (orientation){
+                case EAST:
+                    // north
+                    addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
+                    // east
+                    addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
+                    // south
+                    addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
+                case SOUTH:
+                    // east
+                    addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
+                    // south
+                    addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
+                    // west
+                    addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
+                case NORTH:
+                    // west
+                    addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
+                    // north
+                    addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
+                    // east
+                    addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
+                case WEST:
+                    // west
+                    addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
+                    // north
+                    addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
+                    // south
+                    addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
+            }
+        }
+        // west
         addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
-        // 上
+        // north
         addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
-        // 右
+        // east
         addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
-        // 下
+        // south
         addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
     }
 
@@ -142,7 +195,7 @@ public class AStar {
     }
 
     /**
-     * 判断结点能否放入Open列表
+     * Whether the node can be added to OpenList
      */
     private boolean canAddNodeToOpen(int x, int y) {
         // Whether the point is in map
@@ -151,20 +204,34 @@ public class AStar {
         point.y = y;
         if (x < 0 || y < 0 || !updatedMap.containsKey(point)) return false;
         // Need to add the type mud
-        if (updatedMap.get(point).isType(MapTile.Type.WALL)) return false;
+        if (!isLegal(point)) return false;
         // whether the point is in closeList
         return !isCoordInClose(x, y);
     }
 
     /**
-     * 判断坐标是否在close表中
+     * Whether the coord is legal to visit
+     *  Wall, Mud are illegal
+     *  While speed = 0, left and right are illegal
+     *  While speed >0 backward is illegal
+     */
+    private boolean isLegal(Coordinate coord){
+        MapTile currentTile=updatedMap.get(coord);
+        if(currentTile.isType(MapTile.Type.WALL)) return false;
+        if((currentTile.isType(MapTile.Type.TRAP) && ((TrapTile)currentTile).getTrap().equals("mud"))) return false;
+        return true;
+        }
+
+
+    /**
+     * Whether the nodes are in close list
      */
     private boolean isCoordInClose(Node coord) {
         return coord != null && isCoordInClose(coord.coord.x, coord.coord.y);
     }
 
     /**
-     * 判断坐标是否在close表中
+     * Whether the coordinates are in close list
      */
     private boolean isCoordInClose(int x, int y) {
         if (closeList.isEmpty()) return false;

@@ -1,9 +1,9 @@
 package mycontroller;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.lang.reflect.Array;
+import java.util.*;
 
+import sun.plugin.dom.core.CoreConstants;
 import tiles.LavaTrap;
 import tiles.MapTile;
 import tiles.MapTile.Type;
@@ -11,6 +11,7 @@ import tiles.TrapTile;
 import utilities.Coordinate;
 import controller.CarController;
 import world.Car;
+import world.WorldSpatial;
 
 public class MyAIController extends CarController{
 	private HashMap<Coordinate, MapTile> visitedTiles; //tiles that have come into our view i.e updated
@@ -20,6 +21,7 @@ public class MyAIController extends CarController{
 	
 	private enum State {FINDING_KEYS, FOUND_KEYS};
 	private State currentState;
+	float speed;
 	
 	public MyAIController(Car car) {
 		super(car);
@@ -28,6 +30,7 @@ public class MyAIController extends CarController{
 		visitedTiles = new HashMap<Coordinate, MapTile>();
 		visitedTiles.putAll(getView()); //copy current starting view
 		currentState = State.FINDING_KEYS;
+		speed = car.getSpeed();
 	}
 
 	@Override
@@ -118,5 +121,45 @@ public class MyAIController extends CarController{
 	private double distance(Coordinate point1, Coordinate point2) {
 		return Math.sqrt(Math.pow(point1.x-point2.x, 2) + Math.pow(point1.y-point2.y, 2));
 	}
+
+	private void moveTowards(Coordinate currentPos, Coordinate destination){
+		WorldSpatial.Direction orientation= getOrientation();
+		AStar pathFinding= new AStar(currentPos,updatedMap,destination,orientation,speed);
+		LinkedList<Coordinate> path = new LinkedList<>();
+		if(pathFinding.drawPath(updatedMap,destination) != null) {
+			path.addAll(pathFinding.drawPath(updatedMap, destination));
+		}
+		// move along the path
+
+		while (currentState==State.FINDING_KEYS) {
+			Coordinate nextPos= path.getLast();
+			path.removeLast();
+			switch (orientation) {
+				case WEST:
+					if (currentPos.y < nextPos.y) turnLeft();
+					else if(currentPos.y >nextPos.y) turnRight();
+					else if (currentPos.x> nextPos.x) applyForwardAcceleration();
+					else if (currentPos.x<nextPos.x) applyReverseAcceleration();
+				case EAST:
+					if (currentPos.y < nextPos.y) turnRight();
+					else if(currentPos.y >nextPos.y) turnLeft();
+					else if (currentPos.x> nextPos.x) applyReverseAcceleration();
+					else if (currentPos.x<nextPos.x) applyForwardAcceleration();
+				case NORTH:
+					if (currentPos.y < nextPos.y) applyReverseAcceleration();
+					else if(currentPos.y >nextPos.y) applyForwardAcceleration();
+					else if (currentPos.x> nextPos.x) turnLeft();
+					else if (currentPos.x<nextPos.x) turnRight();
+				case SOUTH:
+					if (currentPos.y < nextPos.y) applyForwardAcceleration();
+					else if(currentPos.y >nextPos.y) applyReverseAcceleration();
+					else if (currentPos.x> nextPos.x) turnRight();
+					else if (currentPos.x<nextPos.x) turnLeft();
+			}
+		}
+	}
+
+
+
 
 }
