@@ -21,7 +21,8 @@ public class MyAIController extends CarController{
 	
 	private enum State {FINDING_KEYS, FOUND_KEYS};
 	private State currentState;
-	float speed;
+	private float Max_Speed=1;
+	private float Min_Speed=-1;
 	
 	public MyAIController(Car car) {
 		super(car);
@@ -30,7 +31,6 @@ public class MyAIController extends CarController{
 		visitedTiles = new HashMap<Coordinate, MapTile>();
 		visitedTiles.putAll(getView()); //copy current starting view
 		currentState = State.FINDING_KEYS;
-		speed = car.getSpeed();
 	}
 
 	@Override
@@ -122,9 +122,15 @@ public class MyAIController extends CarController{
 		return Math.sqrt(Math.pow(point1.x-point2.x, 2) + Math.pow(point1.y-point2.y, 2));
 	}
 
+    /**
+     * Need the current Position and destination
+	 * The path is legal for car to move along. Only need to move to next node in the path in this method.
+     */
 	private void moveTowards(Coordinate currentPos, Coordinate destination){
 		WorldSpatial.Direction orientation= getOrientation();
+		float speed= getSpeed();
 		AStar pathFinding= new AStar(currentPos,updatedMap,destination,orientation,speed);
+		pathFinding.start();
 		LinkedList<Coordinate> path = new LinkedList<>();
 		if(pathFinding.drawPath(updatedMap,destination) != null) {
 			path.addAll(pathFinding.drawPath(updatedMap, destination));
@@ -138,25 +144,30 @@ public class MyAIController extends CarController{
 				case WEST:
 					if (currentPos.y < nextPos.y) turnLeft();
 					else if(currentPos.y >nextPos.y) turnRight();
-					else if (currentPos.x> nextPos.x) applyForwardAcceleration();
-					else if (currentPos.x<nextPos.x) applyReverseAcceleration();
+					else if (currentPos.x> nextPos.x && speed<Max_Speed) applyForwardAcceleration();
+					else if (currentPos.x<nextPos.x && speed > Min_Speed) applyReverseAcceleration();
+					if (currentPos.equals(nextPos)) break;
 				case EAST:
 					if (currentPos.y < nextPos.y) turnRight();
 					else if(currentPos.y >nextPos.y) turnLeft();
-					else if (currentPos.x> nextPos.x) applyReverseAcceleration();
-					else if (currentPos.x<nextPos.x) applyForwardAcceleration();
+					else if (currentPos.x> nextPos.x && speed > Min_Speed) applyReverseAcceleration();
+					else if (currentPos.x<nextPos.x && speed< Max_Speed) applyForwardAcceleration();
+					if (currentPos.equals(nextPos)) break;
 				case NORTH:
-					if (currentPos.y < nextPos.y) applyReverseAcceleration();
-					else if(currentPos.y >nextPos.y) applyForwardAcceleration();
+					if (currentPos.y < nextPos.y && speed > Min_Speed) applyReverseAcceleration();
+					else if(currentPos.y >nextPos.y && speed < Max_Speed) applyForwardAcceleration();
 					else if (currentPos.x> nextPos.x) turnLeft();
 					else if (currentPos.x<nextPos.x) turnRight();
+					if (currentPos.equals(nextPos)) break;
 				case SOUTH:
-					if (currentPos.y < nextPos.y) applyForwardAcceleration();
-					else if(currentPos.y >nextPos.y) applyReverseAcceleration();
+					if (currentPos.y < nextPos.y && speed < Max_Speed) applyForwardAcceleration();
+					else if(currentPos.y >nextPos.y && speed > Min_Speed) applyReverseAcceleration();
 					else if (currentPos.x> nextPos.x) turnRight();
 					else if (currentPos.x<nextPos.x) turnLeft();
+					if (currentPos.equals(nextPos)) break;
 			}
 		}
+		applyBrake(); //brake when arrived destination
 	}
 
 

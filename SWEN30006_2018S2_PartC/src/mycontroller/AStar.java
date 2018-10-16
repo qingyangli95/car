@@ -65,7 +65,7 @@ public class AStar {
      */
     public LinkedList drawPath(HashMap maps, Coordinate destination) {
         Node end = new Node(destination.x, destination.y);
-        if (end == null || maps == null) return;
+        if (end == null || maps == null) return null;
         // store the path in the listOfPathTiles
         LinkedList<Coordinate> listOfPathTiles = new LinkedList<>();
         System.out.println("Total Cost：" + end.G);
@@ -83,7 +83,7 @@ public class AStar {
     private void addNeighborNodeInOpen(Node current) {
         int x = current.coord.x;
         int y = current.coord.y;
-        if(speed==0){
+        if(speed<=0){
             switch (orientation){
                 case EAST:
                 case WEST:
