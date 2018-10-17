@@ -13,10 +13,10 @@ public class FindKeysTileSelector implements ITileSelector {
 
 	@Override
 	public Coordinate selectTile(List<Coordinate> tiles, MyAIController mycontroller) {
-		HashMap<Coordinate, MapTile> updatedMap = mycontroller.getUpdatedMap();
+		HashMap<Coordinate, AugmentedMapTile> updatedMap = mycontroller.getUpdatedMap();
 		
 		for (Coordinate coord: tiles) {
-			MapTile currentTile = updatedMap.get(coord);
+			MapTile currentTile = updatedMap.get(coord).getMapTile();
 			Type currentType = currentTile.getType();
 			//go to lava if it contains a key we need
 			if (currentType.equals(Type.TRAP) && ((TrapTile)currentTile).getTrap().equals("lava")) {

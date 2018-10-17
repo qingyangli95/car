@@ -37,12 +37,11 @@ public class MyAIController extends CarController{
 	}
 
 	
-	private Coordinate getCoordinate(HashMap<Coordinate, MapTile> visitedTiles,
-			HashMap<Coordinate, MapTile> updatedMap) {
+	private Coordinate getCoordinate(HashMap<Coordinate, AugmentedMapTile> map) {
 		LinkedList<Coordinate> tiles = new LinkedList<Coordinate>();
 		
 		//insert coordinates
-		tiles.addAll(updatedMap.keySet());
+		tiles.addAll(map.keySet());
 		
 		//prioritise unvisited tiles first, then use distance
 		tiles.sort(new Comparator<Coordinate>() {
@@ -53,8 +52,8 @@ public class MyAIController extends CarController{
 				double distanceToPoint1 = distanceFrom(point1);
 				double distanceToPoint2 = distanceFrom(point2);
 				
-				boolean visitedPoint1 = visitedTiles.containsKey(point1);
-				boolean visitedPoint2 = visitedTiles.containsKey(point1);
+				boolean visitedPoint1 = map.get(point1).getVisited();
+				boolean visitedPoint2 = map.get(point2).getVisited();
 				
 				//first case is either both visited/unvisited so sort by distance
 				if (!(visitedPoint1 || visitedPoint2) || (visitedPoint1 && visitedPoint2)) {

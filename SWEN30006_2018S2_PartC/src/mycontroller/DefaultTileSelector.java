@@ -12,12 +12,12 @@ public class DefaultTileSelector implements ITileSelector {
 
 	@Override
 	public Coordinate selectTile(List<Coordinate> tiles, MyAIController mycontroller) {
-		HashMap<Coordinate, MapTile> updatedMap = mycontroller.getUpdatedMap();
+		HashMap<Coordinate, AugmentedMapTile> updatedMap = mycontroller.getUpdatedMap();
 		
 		//Default to picking the closest unvisited road that isn't the same spot as
 		//the car.
 		for (Coordinate coord: tiles) {
-			Type currentType = updatedMap.get(coord).getType();
+			Type currentType = updatedMap.get(coord).getMapTile.getType();
 			if (currentType.equals(Type.ROAD) && !mycontroller.isLocatedAt(coord)) {
 				return coord;
 			}
