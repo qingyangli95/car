@@ -1,9 +1,7 @@
 package mycontroller;
 
-import java.lang.reflect.Array;
 import java.util.*;
 
-import tiles.LavaTrap;
 import tiles.MapTile;
 import tiles.MapTile.Type;
 import tiles.TrapTile;
@@ -105,7 +103,7 @@ public class MyAIController extends CarController{
 	private void moveTowards(Coordinate destination){
 		Coordinate currentPos = new Coordinate(getPosition());
 		WorldSpatial.Direction orientation = getOrientation();
-		int velocity = getVelocity();
+		float speed = getSpeed();
 		Coordinate nextPos;
 		AStar pathFinding= new AStar(this, destination);
 		pathFinding.start();
@@ -115,7 +113,7 @@ public class MyAIController extends CarController{
 		}
 		// move along the path
 
-		nextPos= path.getLast(); //path starts at destination, finishes at next coordinate
+		nextPos = path.getLast(); //path starts at destination, finishes at next coordinate
 		path.removeLast();
 		if (currentPos.equals(nextPos)) {
 			applyBrake();
@@ -123,25 +121,111 @@ public class MyAIController extends CarController{
 		}
 		
 		//first deal with stationary case
-		if (speed == 0)
-		//first work out directional change
+		if (Math.abs(speed) < EPS) {
+			switch (orientation) {
+			case NORTH:
+				if (currentPos.y < nextPos.y) {
+					applyForwardAcceleration();
+				} else if (currentPos.y > nextPos.y) {
+					applyReverseAcceleration();
+				} else {
+					tryToMove(); //need to turn but need some speed first
+				}
+			case SOUTH:
+				if (currentPos.y < nextPos.y) {
+					applyReverseAcceleration();
+				} else if (currentPos.y > nextPos.y) {
+					applyForwardAcceleration();
+				} else {
+					tryToMove(); //need to turn but need some speed first
+				}
+			case EAST:
+				if (currentPos.x < nextPos.x) {
+					applyForwardAcceleration();
+				} else if (currentPos.x > nextPos.x) {
+					applyReverseAcceleration();
+				} else {
+					tryToMove(); //need to turn but need some speed first
+				}
+			case WEST:
+				if (currentPos.x < nextPos.x) {
+					applyReverseAcceleration();
+				} else if (currentPos.x > nextPos.x) {
+					applyForwardAcceleration();
+				} else {
+					tryToMove(); //need to turn but need some speed first
+				}
+			}
+			if (safeToMoveForward()) {
+				applyForwardAcceleration();
+			} else {
+				applyReverseAcceleration(); // assume it's safe to move back then otherwise we can't win
+			}
+		}
+			
+		//deal with directional changes/non-directional changes
 		if (currentPos.y < nextPos.y) {
 			switch (orientation) {
-				case NORTH:
-					applyForwardAcceleration();
-					break;
-				case SOUTH:
-					applyReverseAcceleration();
-					break;
-				case WEST:
-					turnRight();
-					if (speed)
+			case NORTH:
+				applyForwardAcceleration();
+				break;
+			case SOUTH:
+				applyReverseAcceleration();
+				break;
+			case WEST:
+				turnRight();
+				break;
+			case EAST:
+				turnLeft();
+				break;
 			}
 		} else if (currentPos.y > nextPos.y) {
+			switch (orientation) {
+			case NORTH:
+				applyReverseAcceleration();
+				break;
+			case SOUTH:
+				applyForwardAcceleration();
+				break;
+			case WEST:
+				turnLeft();
+				break;
+			case EAST:
+				turnRight();
+				break;
+			}
 			
 		} else if (currentPos.x < nextPos.x) {
+			switch (orientation) {
+			case WEST:
+				applyReverseAcceleration();
+				break;
+			case EAST:
+				applyForwardAcceleration();
+				break;
+			case NORTH:
+				turnRight();
+				break;
+			case SOUTH:
+				turnLeft();
+				break;
+			}
 			
 		} else if (currentPos.x < nextPos.x) {
+			switch (orientation) {
+			case WEST:
+				applyForwardAcceleration();
+				break;
+			case EAST:
+				applyReverseAcceleration();
+				break;
+			case NORTH:
+				turnLeft();
+				break;
+			case SOUTH:
+				turnRight();
+				break;
+			}
 			
 		}
 	}
@@ -172,12 +256,46 @@ public class MyAIController extends CarController{
 				updatedMap.get(coord).setVisited(true);
 			}
 
+		}
 	}
-
-
-
-}
-
+		
+	/** helper function to establish whether it's safe to accelerate forward */
+	private boolean safeToMoveForward() {
+		Coordinate currentPos = new Coordinate(getPosition());
+		Coordinate nextPos = null;
+		WorldSpatial.Direction orientation = getOrientation();
+		switch (orientation) {
+			case NORTH:
+				nextPos = new Coordinate(currentPos.x, currentPos.y+1);
+				break;
+			case SOUTH:
+				nextPos = new Coordinate(currentPos.x, currentPos.y-1);
+				break;
+			case EAST:
+				nextPos = new Coordinate(currentPos.x+1, currentPos.y);
+				break;
+			case WEST:
+				nextPos = new Coordinate(currentPos.x-1, currentPos.y);
+		}
+		
+		MapTile nextTile = updatedMap.get(nextPos).getTile();
+		if (nextTile.isType(Type.WALL) || 
+				(nextTile.isType(Type.TRAP) && ((TrapTile)nextTile).getTrap() == "mud")) {
+			return false;
+		} else {
+			return true;
+		}
+				
+	}
+	
+	/** tries to get the car moving from stationary point */
+	private void tryToMove() {
+		if (safeToMoveForward()) {
+			applyForwardAcceleration();
+		} else {
+			applyReverseAcceleration(); // assume it's okay to reverse
+		}
+	}
 
 
 }
