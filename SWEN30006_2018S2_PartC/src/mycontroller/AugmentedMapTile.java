@@ -3,9 +3,8 @@ package mycontroller;
 import tiles.MapTile;
 
 public class AugmentedMapTile {
-	/** This class stores a MapTile and a boolean holding whether it has
-	 * been visited in a particular BFS or DFS. It is essentially a data
-	 * structure. */
+	/*This class stores a MapTile and a boolean holding whether its type is known to us. It is essentially a data
+	 structure. */
 	
 	private MapTile tile;
 	private boolean visited;
