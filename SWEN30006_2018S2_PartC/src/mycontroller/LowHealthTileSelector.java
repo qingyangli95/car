@@ -16,7 +16,7 @@ public class LowHealthTileSelector implements ITileSelector {
 		HashMap<Coordinate, MapTile> updatedMap = mycontroller.getUpdatedMap();
 		
 		for (Coordinate coord: tiles) {
-			MapTile currentTile = updatedMap.get(coord);
+			MapTile currentTile = updatedMap.get(coord).getTile();
 			Type currentType = currentTile.getType();
 			//go to health trap if we can find it
 			if (currentType.equals(Type.TRAP) && ((TrapTile)currentTile).getTrap().equals("health")) {
