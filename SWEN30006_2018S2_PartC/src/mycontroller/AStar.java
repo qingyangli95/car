@@ -1,6 +1,7 @@
 package mycontroller;
 
 
+import controller.AIController;
 import tiles.MapTile;
 import tiles.TrapTile;
 import utilities.Coordinate;
@@ -18,18 +19,19 @@ public class AStar {
     public final static int DIRECT_VALUE = 10; // Cost For action
     Queue<Node> openList = new PriorityQueue<>(); // 优先队列(升序)
     List<Node> closeList = new ArrayList<>();
+    LinkedList<Coordinate> listOfPathTiles = new LinkedList<>();
     Node startPos;
     Node destination;
-    WorldSpatial.Direction orientation;
+    //WorldSpatial.Direction orientation;
     private HashMap<Coordinate, MapTile> updatedMap;
-    private float speed;
-    public AStar(Coordinate startPos, HashMap updatedMap, Coordinate destination, WorldSpatial.Direction orientation, float speed) {
+    //private float speed;
+    public AStar(MyAIController controller, Coordinate destination) {
         // pass in the current position as starrPos, pass in the current updatedMap
-        this.startPos.coord = startPos;
+        this.startPos.coord = new Coordinate(controller.getPosition());
         this.destination.coord = destination;
-        this.updatedMap = updatedMap;
-        this.orientation = orientation;
-        this.speed = speed;
+        this.updatedMap = controller.getUpdatedMap();
+        //this.orientation = orientation;
+        // this.speed = speed;
     }
 
     /**
@@ -51,7 +53,7 @@ public class AStar {
     private void moveNodes() {
         while (!openList.isEmpty()) {
             if (isCoordInClose(destination)) {
-                drawPath(updatedMap, destination.coord);
+                drawPath(updatedMap, destination);
                 break;
             }
             Node current = openList.poll();
@@ -63,11 +65,10 @@ public class AStar {
     /**
      * Store the path in listOfPathTiles
      */
-    public LinkedList drawPath(HashMap maps, Coordinate destination) {
-        Node end = new Node(destination.x, destination.y);
+    public LinkedList drawPath(HashMap maps, Node end) {
         if (end == null || maps == null) return null;
         // store the path in the listOfPathTiles
-        LinkedList<Coordinate> listOfPathTiles = new LinkedList<>();
+
         System.out.println("Total Cost：" + end.G);
         while (end != null) {
             Coordinate c = end.coord;
@@ -83,59 +84,74 @@ public class AStar {
     private void addNeighborNodeInOpen(Node current) {
         int x = current.coord.x;
         int y = current.coord.y;
-        if(speed<=0){
-            switch (orientation){
-                case EAST:
-                case WEST:
-                    addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
-                    addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
-                case NORTH:
-                case SOUTH:
-                    addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
-                    addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
+        MapTile currentTile=updatedMap.get(current.coord);
+        if((currentTile.isType(MapTile.Type.TRAP) && ((TrapTile)currentTile).getTrap().equals("grass"))){
+            if(current.parent.coord.x==current.coord.x){
+                addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
+                addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
             }
+            else if (current.parent.coord.y==current.coord.y){
+                addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
+                addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
+            }
+        }
+        else {
+            // west
+            addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
+            // north
+            addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
+            // east
+            addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
+            // south
+            addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
         }
 
-        else{
-            switch (orientation){
-                case EAST:
-                    // north
-                    addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
-                    // east
-                    addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
-                    // south
-                    addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
-                case SOUTH:
-                    // east
-                    addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
-                    // south
-                    addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
-                    // west
-                    addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
-                case NORTH:
-                    // west
-                    addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
-                    // north
-                    addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
-                    // east
-                    addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
-                case WEST:
-                    // west
-                    addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
-                    // north
-                    addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
-                    // south
-                    addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
-            }
-        }
-        // west
-        addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
-        // north
-        addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
-        // east
-        addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
-        // south
-        addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
+//        if(speed<=0){
+//            switch (orientation){
+//                case EAST:
+//                case WEST:
+//                    addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
+//                    addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
+//                case NORTH:
+//                case SOUTH:
+//                    addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
+//                    addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
+//            }
+//        }
+//
+//        else{
+//            switch (orientation){
+//                case EAST:
+//                    // north
+//                    addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
+//                    // east
+//                    addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
+//                    // south
+//                    addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
+//                case SOUTH:
+//                    // east
+//                    addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
+//                    // south
+//                    addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
+//                    // west
+//                    addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
+//                case NORTH:
+//                    // west
+//                    addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
+//                    // north
+//                    addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
+//                    // east
+//                    addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
+//                case WEST:
+//                    // west
+//                    addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
+//                    // north
+//                    addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
+//                    // south
+//                    addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
+//            }
+//        }
+
     }
 
     /**
