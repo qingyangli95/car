@@ -1,11 +1,8 @@
 package mycontroller;
 
-
-import controller.AIController;
 import tiles.MapTile;
 import tiles.TrapTile;
 import utilities.Coordinate;
-import world.WorldSpatial;
 
 import java.util.*;
 
@@ -17,18 +14,20 @@ import java.util.*;
  */
 public class AStar {
     public final static int DIRECT_VALUE = 10; // Cost For action
-    Queue<Node> openList = new PriorityQueue<>(); // 优先队列(升序)
+    Queue<Node> openList = new PriorityQueue<>(); // ä¼˜å…ˆé˜Ÿåˆ—(å�‡åº�)
     List<Node> closeList = new ArrayList<>();
     LinkedList<Coordinate> listOfPathTiles = new LinkedList<>();
     Node startPos;
     Node destination;
     //WorldSpatial.Direction orientation;
-    private HashMap<Coordinate, MapTile> updatedMap;
+    private HashMap<Coordinate, AugmentedMapTile> updatedMap;
+    
     //private float speed;
     public AStar(MyAIController controller, Coordinate destination) {
         // pass in the current position as starrPos, pass in the current updatedMap
-        this.startPos.coord = new Coordinate(controller.getPosition());
-        this.destination.coord = destination;
+    	startPos = new Node(new Coordinate(controller.getPosition()));
+    	this.destination = new Node(destination);
+
         this.updatedMap = controller.getUpdatedMap();
         //this.orientation = orientation;
         // this.speed = speed;
@@ -42,7 +41,7 @@ public class AStar {
         // clean
         openList.clear();
         closeList.clear();
-        // 开始搜索
+        // å¼€å§‹æ�œç´¢
         openList.add(startPos);
         moveNodes();
     }
@@ -53,7 +52,7 @@ public class AStar {
     private void moveNodes() {
         while (!openList.isEmpty()) {
             if (isCoordInClose(destination)) {
-                drawPath(updatedMap, destination);
+                drawPath(destination);
                 break;
             }
             Node current = openList.poll();
@@ -65,17 +64,15 @@ public class AStar {
     /**
      * Store the path in listOfPathTiles
      */
-    public LinkedList drawPath(HashMap maps, Node end) {
-        if (end == null || maps == null) return null;
+    public void drawPath(Node end) {
+        if (end == null || updatedMap == null) return;
         // store the path in the listOfPathTiles
-
-        System.out.println("Total Cost：" + end.G);
         while (end != null) {
             Coordinate c = end.coord;
             listOfPathTiles.add(c);
             end = end.parent;
         }
-        return listOfPathTiles;
+        return;
     }
 
     /**
@@ -84,7 +81,7 @@ public class AStar {
     private void addNeighborNodeInOpen(Node current) {
         int x = current.coord.x;
         int y = current.coord.y;
-        MapTile currentTile=updatedMap.get(current.coord);
+        MapTile currentTile = updatedMap.get(current.coord).getTile();
         if((currentTile.isType(MapTile.Type.TRAP) && ((TrapTile)currentTile).getTrap().equals("grass"))){
             if(current.parent.coord.x==current.coord.x){
                 addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
@@ -215,9 +212,7 @@ public class AStar {
      */
     private boolean canAddNodeToOpen(int x, int y) {
         // Whether the point is in map
-        Coordinate point = null;
-        point.x = x;
-        point.y = y;
+        Coordinate point = new Coordinate(x, y);
         if (x < 0 || y < 0 || !updatedMap.containsKey(point)) return false;
         // Need to add the type mud
         if (!isLegal(point)) return false;
@@ -232,7 +227,7 @@ public class AStar {
      *  While speed >0 backward is illegal
      */
     private boolean isLegal(Coordinate coord){
-        MapTile currentTile=updatedMap.get(coord);
+        MapTile currentTile=updatedMap.get(coord).getTile();
         if(currentTile.isType(MapTile.Type.WALL)) return false;
         if((currentTile.isType(MapTile.Type.TRAP) && ((TrapTile)currentTile).getTrap().equals("mud"))) return false;
         return true;

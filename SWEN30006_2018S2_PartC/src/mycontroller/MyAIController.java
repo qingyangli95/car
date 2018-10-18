@@ -18,13 +18,14 @@ public class MyAIController extends CarController{
 	public MyAIController(Car car) {
 		super(car);
 		initMap();
-		updateMap();
 	}
 
 	@Override
 	public void update() {
 		updateMap();
+		System.out.println("current pos: "+getPosition());
 		Coordinate destination = getCoordinate(updatedMap);
+		System.out.println("best destination: "+destination.x+","+destination.y);
 		moveTowards(destination);
 	}
 
@@ -108,17 +109,25 @@ public class MyAIController extends CarController{
 		AStar pathFinding= new AStar(this, destination);
 		pathFinding.start();
 		LinkedList<Coordinate> path = new LinkedList<>();
-		if(pathFinding.listOfPathTiles!= null) {
+		
+		if (pathFinding.listOfPathTiles!= null) {
 			path.addAll(pathFinding.listOfPathTiles);
 		}
-		// move along the path
-
-		nextPos = path.getLast(); //path starts at destination, finishes at next coordinate
+		
+		//our last in the list is our own position
 		path.removeLast();
-		if (currentPos.equals(nextPos)) {
+		
+		if (path.size() == 0) {
+			//path doesn't want us to go anywhere
 			applyBrake();
 			return;
 		}
+		// move along the path
+		
+		nextPos = path.getLast(); //path starts at destination, finishes at next coordinate
+		System.out.println("next move: "+nextPos.x+","+nextPos.y);
+		path.removeLast();
+
 		
 		//first deal with stationary case
 		if (Math.abs(speed) < EPS) {
@@ -163,7 +172,7 @@ public class MyAIController extends CarController{
 			}
 		}
 			
-		//deal with directional changes/non-directional changes
+		//deal with moving case
 		if (currentPos.y < nextPos.y) {
 			switch (orientation) {
 			case NORTH:
@@ -211,7 +220,7 @@ public class MyAIController extends CarController{
 				break;
 			}
 			
-		} else if (currentPos.x < nextPos.x) {
+		} else if (currentPos.x > nextPos.x) {
 			switch (orientation) {
 			case WEST:
 				applyForwardAcceleration();
@@ -236,8 +245,7 @@ public class MyAIController extends CarController{
 		HashMap<Coordinate, MapTile> tempMap = getMap();
 		updatedMap = new HashMap<Coordinate, AugmentedMapTile>();
 		MapTile tempMapTile;
-		for (Coordinate coord: tempMap.keySet())
-		{
+		for (Coordinate coord: tempMap.keySet()) {
 			tempMapTile = tempMap.get(coord);
 			AugmentedMapTile tempAugmentedMapTile = new AugmentedMapTile(tempMapTile);
 			updatedMap.put(coord, tempAugmentedMapTile);
@@ -249,9 +257,7 @@ public class MyAIController extends CarController{
 	private void updateMap() {
 		HashMap<Coordinate, MapTile> view = getView();
 		for (Coordinate coord: view.keySet()) {
-			updatedMap.get(coord).setVisited(true);
-			if (updatedMap.containsKey(coord))
-			{
+			if (updatedMap.containsKey(coord)) {
 				updatedMap.get(coord).setTile(view.get(coord));
 				updatedMap.get(coord).setVisited(true);
 			}
@@ -296,6 +302,10 @@ public class MyAIController extends CarController{
 			applyReverseAcceleration(); // assume it's okay to reverse
 		}
 	}
-
+	
+	/** helper function to get current tile we're on */
+	public MapTile getMapTile() {
+		return updatedMap.get(new Coordinate(getPosition())).getTile();
+	}
 
 }

@@ -5,16 +5,20 @@ import utilities.Coordinate;
 public class Node implements Comparable<Node>
 {
 
-    public Coordinate coord; // 坐标
-    public Node parent; // 父结点
-    public int G; // G：是个准确的值，是起点到当前结点的代价
-    public int H; // H：是个估值，当前结点到目的结点的估计代价
+    public Coordinate coord; // å��æ ‡
+    public Node parent; // çˆ¶ç»“ç‚¹
+    public int G; // Gï¼šæ˜¯ä¸ªå‡†ç¡®çš„å€¼ï¼Œæ˜¯èµ·ç‚¹åˆ°å½“å‰�ç»“ç‚¹çš„ä»£ä»·
+    public int H; // Hï¼šæ˜¯ä¸ªä¼°å€¼ï¼Œå½“å‰�ç»“ç‚¹åˆ°ç›®çš„ç»“ç‚¹çš„ä¼°è®¡ä»£ä»·
 
     public Node(int x, int y)
     {
         this.coord = new Coordinate(x, y);
     }
-
+    
+    public Node(Coordinate coord) {
+    	this.coord = coord;
+    }
+    
     public Node(Coordinate coord, Node parent, int g, int h)
     {
         this.coord = coord;
