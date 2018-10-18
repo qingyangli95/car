@@ -3,7 +3,6 @@ package mycontroller;
 import java.util.HashMap;
 import java.util.List;
 
-import tiles.MapTile;
 import tiles.MapTile.Type;
 import utilities.Coordinate;
 
@@ -17,7 +16,7 @@ public class DefaultTileSelector implements ITileSelector {
 		//Default to picking the closest unvisited road that isn't the same spot as
 		//the car.
 		for (Coordinate coord: tiles) {
-			Type currentType = updatedMap.get(coord).getTile.getType();
+			Type currentType = updatedMap.get(coord).getTile().getType();
 			if (currentType.equals(Type.ROAD) && !mycontroller.isLocatedAt(coord)) {
 				return coord;
 			}

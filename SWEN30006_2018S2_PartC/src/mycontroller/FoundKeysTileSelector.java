@@ -2,6 +2,7 @@ package mycontroller;
 
 import java.util.List;
 
+import tiles.MapTile;
 import tiles.MapTile.Type;
 import utilities.Coordinate;
 

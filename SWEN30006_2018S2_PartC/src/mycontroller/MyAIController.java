@@ -3,7 +3,6 @@ package mycontroller;
 import java.lang.reflect.Array;
 import java.util.*;
 
-import sun.plugin.dom.core.CoreConstants;
 import tiles.LavaTrap;
 import tiles.MapTile;
 import tiles.MapTile.Type;
@@ -18,9 +17,6 @@ public class MyAIController extends CarController{
 
 	private double EPS = 1e-7;
 
-	private float Max_Speed=1;
-	private float Min_Speed=-1;
-
 	public MyAIController(Car car) {
 		super(car);
 		initMap();
@@ -30,6 +26,7 @@ public class MyAIController extends CarController{
 	@Override
 	public void update() {
 		updateMap();
+		Coordinate destination = getCoordinate(updatedMap);
 	}
 
 

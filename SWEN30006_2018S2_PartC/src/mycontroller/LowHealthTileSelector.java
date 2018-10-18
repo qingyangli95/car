@@ -13,7 +13,7 @@ public class LowHealthTileSelector implements ITileSelector {
 
 	@Override
 	public Coordinate selectTile(List<Coordinate> tiles, MyAIController mycontroller) {
-		HashMap<Coordinate, MapTile> updatedMap = mycontroller.getUpdatedMap();
+		HashMap<Coordinate, AugmentedMapTile> updatedMap = mycontroller.getUpdatedMap();
 		
 		for (Coordinate coord: tiles) {
 			MapTile currentTile = updatedMap.get(coord).getTile();

@@ -20,7 +20,7 @@ public class FindKeysTileSelector implements ITileSelector {
 			Type currentType = currentTile.getType();
 			//go to lava if it contains a key we need
 			if (currentType.equals(Type.TRAP) && ((TrapTile)currentTile).getTrap().equals("lava")) {
-				int lavaTileKey = ((LavaTrap) updatedMap.get(coord)).getKey();
+				int lavaTileKey = ((LavaTrap) currentTile).getKey();
 				if (lavaTileKey!=0 && !(mycontroller.getKeys().contains(lavaTileKey))) {
 					return coord;
 				}
