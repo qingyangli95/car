@@ -104,45 +104,45 @@ public class MyAIController extends CarController{
 	private void moveTowards(Coordinate currentPos, Coordinate destination){
 		WorldSpatial.Direction orientation= getOrientation();
 		float speed= getSpeed();
-		AStar pathFinding= new AStar(currentPos,updatedMap,destination,orientation,speed);
+		Coordinate nextPos;
+		AStar pathFinding= new AStar(this, destination);
 		pathFinding.start();
 		LinkedList<Coordinate> path = new LinkedList<>();
-		if(pathFinding.drawPath(updatedMap,destination) != null) {
-			path.addAll(pathFinding.drawPath(updatedMap, destination));
+		if(pathFinding.listOfPathTiles!= null) {
+			path.addAll(pathFinding.listOfPathTiles);
 		}
 		// move along the path
 
-		while (currentState==State.FINDING_KEYS) {
-			Coordinate nextPos= path.getLast();
-			path.removeLast();
-			switch (orientation) {
-				case WEST:
-					if (currentPos.y < nextPos.y) turnLeft();
-					else if(currentPos.y >nextPos.y) turnRight();
-					else if (currentPos.x> nextPos.x && speed<Max_Speed) applyForwardAcceleration();
-					else if (currentPos.x<nextPos.x && speed > Min_Speed) applyReverseAcceleration();
-					if (currentPos.equals(nextPos)) break;
-				case EAST:
-					if (currentPos.y < nextPos.y) turnRight();
-					else if(currentPos.y >nextPos.y) turnLeft();
-					else if (currentPos.x> nextPos.x && speed > Min_Speed) applyReverseAcceleration();
-					else if (currentPos.x<nextPos.x && speed< Max_Speed) applyForwardAcceleration();
-					if (currentPos.equals(nextPos)) break;
-				case NORTH:
-					if (currentPos.y < nextPos.y && speed > Min_Speed) applyReverseAcceleration();
-					else if(currentPos.y >nextPos.y && speed < Max_Speed) applyForwardAcceleration();
-					else if (currentPos.x> nextPos.x) turnLeft();
-					else if (currentPos.x<nextPos.x) turnRight();
-					if (currentPos.equals(nextPos)) break;
-				case SOUTH:
-					if (currentPos.y < nextPos.y && speed < Max_Speed) applyForwardAcceleration();
-					else if(currentPos.y >nextPos.y && speed > Min_Speed) applyReverseAcceleration();
-					else if (currentPos.x> nextPos.x) turnRight();
-					else if (currentPos.x<nextPos.x) turnLeft();
-					if (currentPos.equals(nextPos)) break;
-			}
+		//while (currentState==State.FINDING_KEYS) {
+		nextPos= path.getLast();
+		path.removeLast();
+		if (currentPos.equals(nextPos)) return;
+		switch (orientation) {
+			case WEST:
+				if (currentPos.y < nextPos.y) turnLeft();
+				else if(currentPos.y >nextPos.y) turnRight();
+				else if (currentPos.x> nextPos.x && speed<Max_Speed) applyForwardAcceleration();
+				else if (currentPos.x<nextPos.x && speed > Min_Speed) applyReverseAcceleration();
+				if (currentPos.equals(nextPos)) break;
+			case EAST:
+				if (currentPos.y < nextPos.y) turnRight();
+				else if(currentPos.y >nextPos.y) turnLeft();
+				else if (currentPos.x> nextPos.x && speed > Min_Speed) applyReverseAcceleration();
+				else if (currentPos.x<nextPos.x && speed< Max_Speed) applyForwardAcceleration();
+				if (currentPos.equals(nextPos)) break;
+			case NORTH:
+				if (currentPos.y < nextPos.y && speed > Min_Speed) applyReverseAcceleration();
+				else if(currentPos.y >nextPos.y && speed < Max_Speed) applyForwardAcceleration();
+				else if (currentPos.x> nextPos.x) turnLeft();
+				else if (currentPos.x<nextPos.x) turnRight();
+				if (currentPos.equals(nextPos)) break;
+			case SOUTH:
+				if (currentPos.y < nextPos.y && speed < Max_Speed) applyForwardAcceleration();
+				else if(currentPos.y >nextPos.y && speed > Min_Speed) applyReverseAcceleration();
+				else if (currentPos.x> nextPos.x) turnRight();
+				else if (currentPos.x<nextPos.x) turnLeft();
+				if (currentPos.equals(nextPos)) break;
 		}
-		applyBrake(); //brake when arrived destination
 	}
 
 	//ialises the map by putting all of the tiles into AugmentedMapTiles which
