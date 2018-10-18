@@ -101,7 +101,8 @@ public class MyAIController extends CarController{
 	 * Need the current Position and destination
 	 * The path is legal for car to move along. Only need to move to next node in the path in this method.
 	 */
-	private void moveTowards(Coordinate currentPos, Coordinate destination){
+	private void moveTowards(Coordinate destination){
+		Coordinate currentPos = new Coordinate(getPosition());
 		WorldSpatial.Direction orientation= getOrientation();
 		float speed= getSpeed();
 		Coordinate nextPos;
@@ -123,43 +124,27 @@ public class MyAIController extends CarController{
 				else if(currentPos.y >nextPos.y) turnRight();
 				else if (currentPos.x> nextPos.x && speed<Max_Speed) applyForwardAcceleration();
 				else if (currentPos.x<nextPos.x && speed > Min_Speed) applyReverseAcceleration();
-				if (currentPos.equals(nextPos)) break;
+				
 			case EAST:
 				if (currentPos.y < nextPos.y) turnRight();
 				else if(currentPos.y >nextPos.y) turnLeft();
 				else if (currentPos.x> nextPos.x && speed > Min_Speed) applyReverseAcceleration();
 				else if (currentPos.x<nextPos.x && speed< Max_Speed) applyForwardAcceleration();
-				if (currentPos.equals(nextPos)) break;
+				
 			case NORTH:
 				if (currentPos.y < nextPos.y && speed > Min_Speed) applyReverseAcceleration();
 				else if(currentPos.y >nextPos.y && speed < Max_Speed) applyForwardAcceleration();
 				else if (currentPos.x> nextPos.x) turnLeft();
 				else if (currentPos.x<nextPos.x) turnRight();
-				if (currentPos.equals(nextPos)) break;
+				
 			case SOUTH:
 				if (currentPos.y < nextPos.y && speed < Max_Speed) applyForwardAcceleration();
 				else if(currentPos.y >nextPos.y && speed > Min_Speed) applyReverseAcceleration();
 				else if (currentPos.x> nextPos.x) turnRight();
 				else if (currentPos.x<nextPos.x) turnLeft();
-				if (currentPos.equals(nextPos)) break;
+				
 		}
 	}
-
-	//ialises the map by putting all of the tiles into AugmentedMapTiles which
-	 //* just have a boolean value attached to each tile to make path finding easier */
-	private void initMap() {
-		HashMap<Coordinate, MapTile> tempMap = getMap();
-		updatedMap = new HashMap<Coordinate, AugmentedMapTile>();
-		MapTile tempMapTile;
-		for (Coordinate coord: tempMap.keySet())
-		{
-			tempMapTile = tempMap.get(coord);
-			AugmentedMapTile tempAugmentedMapTile = new AugmentedMapTile(tempMapTile);
-			updatedMap.put(coord, tempAugmentedMapTile);
-		}
-
-	}
-
 
 	/** Updates the map with the current view from the car using getView() */
 	private void updateMap() {
