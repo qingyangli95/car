@@ -16,7 +16,7 @@ public class FindKeysTileSelector implements ITileSelector {
 		HashMap<Coordinate, AugmentedMapTile> updatedMap = mycontroller.getUpdatedMap();
 		
 		for (Coordinate coord: tiles) {
-			MapTile currentTile = updatedMap.get(coord).getMapTile();
+			MapTile currentTile = updatedMap.get(coord).getTile();
 			Type currentType = currentTile.getType();
 			//go to lava if it contains a key we need
 			if (currentType.equals(Type.TRAP) && ((TrapTile)currentTile).getTrap().equals("lava")) {
