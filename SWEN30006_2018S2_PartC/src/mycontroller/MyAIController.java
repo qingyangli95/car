@@ -12,8 +12,9 @@ import world.WorldSpatial;
 
 public class MyAIController extends CarController{
 	private HashMap<Coordinate,AugmentedMapTile> updatedMap; //most up to date view of the entire map
+	private LinkedList<Coordinate> currentPath; 
 
-	private double EPS = 1e-7;
+	private final double EPS = 1e-7;
 
 	public MyAIController(Car car) {
 		super(car);
@@ -23,9 +24,16 @@ public class MyAIController extends CarController{
 	@Override
 	public void update() {
 		updateMap();
-		System.out.println("current pos: "+getPosition());
 		Coordinate destination = getCoordinate(updatedMap);
-		System.out.println("best destination: "+destination.x+","+destination.y);
+		//try to get a path
+		currentPath = pathFinder(destination);
+		while (currentPath.size() == 0) {
+			//couldn't find path, destination is bad
+			updatedMap.get(destination).setBlackListed(true);
+			//get new destination, find new route
+			destination = getCoordinate(updatedMap);
+			currentPath = pathFinder(destination);
+		}
 		moveTowards(destination);
 	}
 
@@ -97,6 +105,15 @@ public class MyAIController extends CarController{
 		return updatedMap;
 	}
 
+	
+	/** Tries to find a path to a destination 
+	 */
+	private LinkedList<Coordinate> pathFinder(Coordinate destination) {
+		AStar pathFinding= new AStar(this, destination);
+		pathFinding.start();
+		return pathFinding.listOfPathTiles;
+	}
+	
 	/**
 	 * Need the current Position and destination
 	 * The path is legal for car to move along. Only need to move to next node in the path in this method.
@@ -106,27 +123,20 @@ public class MyAIController extends CarController{
 		WorldSpatial.Direction orientation = getOrientation();
 		float speed = getSpeed();
 		Coordinate nextPos;
-		AStar pathFinding= new AStar(this, destination);
-		pathFinding.start();
-		LinkedList<Coordinate> path = new LinkedList<>();
-		
-		if (pathFinding.listOfPathTiles!= null) {
-			path.addAll(pathFinding.listOfPathTiles);
-		}
-		
+
 		//our last in the list is our own position
-		path.removeLast();
+		currentPath.removeLast();
 		
-		if (path.size() == 0) {
+		if (currentPath.size() == 0) {
 			//path doesn't want us to go anywhere
 			applyBrake();
 			return;
 		}
 		// move along the path
 		
-		nextPos = path.getLast(); //path starts at destination, finishes at next coordinate
+		nextPos = currentPath.getLast(); //path starts at destination, finishes at next coordinate
 		System.out.println("next move: "+nextPos.x+","+nextPos.y);
-		path.removeLast();
+		currentPath.removeLast();
 
 		
 		//first deal with stationary case
@@ -306,6 +316,13 @@ public class MyAIController extends CarController{
 	/** helper function to get current tile we're on */
 	public MapTile getMapTile() {
 		return updatedMap.get(new Coordinate(getPosition())).getTile();
+	}
+	
+	/** helper function to get current coordinate
+	 */
+	
+	public Coordinate getCoordinate() {
+		return new Coordinate(getPosition());
 	}
 
 }

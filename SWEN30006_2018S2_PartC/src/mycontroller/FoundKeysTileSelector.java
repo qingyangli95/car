@@ -2,7 +2,6 @@ package mycontroller;
 
 import java.util.List;
 
-import tiles.MapTile;
 import tiles.MapTile.Type;
 import utilities.Coordinate;
 
@@ -12,8 +11,12 @@ public class FoundKeysTileSelector implements ITileSelector {
 	public Coordinate selectTile(List<Coordinate> tiles, MyAIController mycontroller) {
 		//head to nearest exit
 		for (Coordinate coord: tiles) {
-			MapTile currentTile = mycontroller.getUpdatedMap().get(coord).getTile();
-			if (currentTile.isType(Type.FINISH)) {
+			//check if blacklisted
+			AugmentedMapTile tileInQuestion = mycontroller.getUpdatedMap().get(coord);
+			if (tileInQuestion.getBlackListed()) {
+				continue;
+			} 
+			if (tileInQuestion.getTile().isType(Type.FINISH)) {
 				return coord;
 			}
 		}

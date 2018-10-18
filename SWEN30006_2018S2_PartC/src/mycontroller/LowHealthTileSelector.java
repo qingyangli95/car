@@ -1,6 +1,5 @@
 package mycontroller;
 
-import java.util.HashMap;
 import java.util.List;
 
 import tiles.MapTile;
@@ -13,13 +12,18 @@ public class LowHealthTileSelector implements ITileSelector {
 
 	@Override
 	public Coordinate selectTile(List<Coordinate> tiles, MyAIController mycontroller) {
-		HashMap<Coordinate, AugmentedMapTile> updatedMap = mycontroller.getUpdatedMap();
 		
 		for (Coordinate coord: tiles) {
-			MapTile currentTile = updatedMap.get(coord).getTile();
-			Type currentType = currentTile.getType();
+			//check if blacklisted
+			AugmentedMapTile tileInQuestion = mycontroller.getUpdatedMap().get(coord);
+			if (tileInQuestion.getBlackListed()) {
+				continue;
+			} 
+			
+			MapTile currentMapTile = tileInQuestion.getTile();
+			Type currentType = currentMapTile.getType();
 			//go to health trap if we can find it
-			if (currentType.equals(Type.TRAP) && ((TrapTile)currentTile).getTrap().equals("health")) {
+			if (currentType.equals(Type.TRAP) && ((TrapTile)currentMapTile).getTrap().equals("health")) {
 				return coord;
 			}
 		}

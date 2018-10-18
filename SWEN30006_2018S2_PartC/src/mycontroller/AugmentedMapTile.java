@@ -8,11 +8,13 @@ public class AugmentedMapTile {
 	
 	private MapTile tile;
 	private boolean visited;
+	private boolean blackListed;
 	
 	/** Constructor */
 	public AugmentedMapTile(MapTile tile) {
 		setTile(tile);
 		visited = false;
+		blackListed = false;
 	}
 	
 	/** Getters and setters */
@@ -27,6 +29,12 @@ public class AugmentedMapTile {
 	}
 	public void setVisited(boolean visited) {
 		this.visited = visited;
+	}
+	public boolean getBlackListed() {
+		return this.blackListed;
+	}
+	public void setBlackListed(boolean blackList) {
+		blackListed = blackList;
 	}
 	
 }

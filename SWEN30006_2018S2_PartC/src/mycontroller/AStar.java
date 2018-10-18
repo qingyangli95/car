@@ -3,6 +3,7 @@ package mycontroller;
 import tiles.MapTile;
 import tiles.TrapTile;
 import utilities.Coordinate;
+import world.WorldSpatial;
 
 import java.util.*;
 
@@ -19,7 +20,7 @@ public class AStar {
     LinkedList<Coordinate> listOfPathTiles = new LinkedList<>();
     Node startPos;
     Node destination;
-    //WorldSpatial.Direction orientation;
+    WorldSpatial.Direction orientation;
     private HashMap<Coordinate, AugmentedMapTile> updatedMap;
     
     //private float speed;
@@ -27,7 +28,7 @@ public class AStar {
         // pass in the current position as starrPos, pass in the current updatedMap
     	startPos = new Node(new Coordinate(controller.getPosition()));
     	this.destination = new Node(destination);
-
+    	this.orientation = controller.getOrientation();
         this.updatedMap = controller.getUpdatedMap();
         //this.orientation = orientation;
         // this.speed = speed;
@@ -83,14 +84,32 @@ public class AStar {
         int y = current.coord.y;
         MapTile currentTile = updatedMap.get(current.coord).getTile();
         if((currentTile.isType(MapTile.Type.TRAP) && ((TrapTile)currentTile).getTrap().equals("grass"))){
-            if(current.parent.coord.x==current.coord.x){
-                addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
-                addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
-            }
-            else if (current.parent.coord.y==current.coord.y){
-                addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
-                addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
-            }
+        	if (current.parent == null) { //this is the first point
+        		//base the direction on current orientation of car
+        		switch (orientation) {
+        		case NORTH: 
+        		case SOUTH:
+        			addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
+        			addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
+        			break;
+        		case WEST:
+        		case EAST:
+        			addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
+                    addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
+                    break;
+        		}
+   
+        	//path away from starting point, base it on direction we came from
+        	} else {
+        		if(current.parent.coord.x==current.coord.x){
+        			addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
+        			addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
+        		}
+        		else if (current.parent.coord.y==current.coord.y){
+        			addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
+        			addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
+        		}
+        	}
         }
         else {
             // west
@@ -152,9 +171,14 @@ public class AStar {
     }
 
     /**
-     * Add one neighbor to OpenList
+     * Add one neighbor to OpenList, this handles more complicated logic and legality of 
+     * adding which neighbours
      */
     private void addNeighborNodeInOpen(Node current, int x, int y, int value) {
+    	MapTile currentTile = updatedMap.get(current.coord).getTile();
+    	if((currentTile.isType(MapTile.Type.TRAP) && ((TrapTile)currentTile).getTrap().equals("lava"))) {
+    		value += 50;
+    	}
         if (canAddNodeToOpen(x, y)) {
             Coordinate coord = new Coordinate(x, y);
             int G = current.G + value; // Calculate the G value of neighbors
