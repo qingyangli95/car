@@ -45,7 +45,7 @@ public class MyAIController extends CarController{
 		
 		//prioritise unvisited tiles first, then use distance
 		tiles.sort(new Comparator<Coordinate>() {
-
+			//sort such the closest unvisited tiles are at the front of the list
 			@Override
 			public int compare(Coordinate point1, Coordinate point2) {
 				
@@ -60,10 +60,10 @@ public class MyAIController extends CarController{
 					if (Math.abs(distanceToPoint1 - distanceToPoint2) < EPS) {
 						return 0;
 					} else {
-						return distanceToPoint1 < distanceToPoint2? 1:-1; //better to go to tile 1
+						return distanceToPoint1 < distanceToPoint2?-1:1; //better to go to tile 1 first
 					}
 				} else {
-					return visitedPoint2?1:-1; //better to go to tile1 since we already visited tile2
+					return visitedPoint2?-1:1; //put tile1 infront
 				}
 				
 			}
