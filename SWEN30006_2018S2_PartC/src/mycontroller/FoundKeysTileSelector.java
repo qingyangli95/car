@@ -11,7 +11,7 @@ public class FoundKeysTileSelector implements ITileSelector {
 	public Coordinate selectTile(List<Coordinate> tiles, MyAIController mycontroller) {
 		//head to nearest exit
 		for (Coordinate coord: tiles) {
-			MapTile currentTile = mycontroller.getUpdatedMap().get(coord).getMapTile();
+			MapTile currentTile = mycontroller.getUpdatedMap().get(coord).getTile();
 			if (currentTile.isType(Type.FINISH)) {
 				return coord;
 			}
