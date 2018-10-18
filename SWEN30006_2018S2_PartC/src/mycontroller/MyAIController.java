@@ -14,8 +14,7 @@ import world.Car;
 import world.WorldSpatial;
 
 public class MyAIController extends CarController{
-	private HashMap<Coordinate, MapTile> visitedTiles; //tiles that have come into our view i.e updated
-	private HashMap<Coordinate, MapTile> updatedMap; //most up to date view of the entire map
+	private HashMap<Coordinate,AugmentedMapTile> updatedMap; //most up to date view of the entire map
 	
 	private double EPS = 1e-7;
 	
