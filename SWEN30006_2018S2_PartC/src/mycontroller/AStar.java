@@ -11,24 +11,37 @@ import java.util.*;
  * @author kesar
  * @Description: AStar Path Finding
  */
-public class AStar {
-    Queue<Node> openList = new PriorityQueue<>(); 
-    List<Node> closeList = new ArrayList<>();
-    LinkedList<Coordinate> listOfPathTiles = new LinkedList<>();
+public class AStar implements IPathFinder {
+    Queue<Node> openList;
+    List<Node> closeList;
+    LinkedList<Coordinate> listOfPathTiles;
     Node startPos;
     Node destination;
     Direction startOrientation;
     private HashMap<Coordinate, AugmentedMapTile> updatedMap;
     MyAIController controller;
     
-    public AStar(MyAIController controller, Coordinate destination) {
-    	//initialise useful values
-    	this.destination = new Node(destination);
-    	startPos = new Node(controller.getCoordinate());
+    public AStar(MyAIController controller) {
     	this.controller = controller;
+    }
+    
+    @Override
+	public LinkedList<Coordinate> getPath(Coordinate destination) {
+    	//initialise userful values
+    	this.destination = new Node(destination);
     	startOrientation = controller.getOrientation();
     	updatedMap = controller.getUpdatedMap();
-    }
+    	startPos = new Node(controller.getCoordinate());
+    	listOfPathTiles = new LinkedList<Coordinate>();
+    	openList = new PriorityQueue<Node>();
+    	closeList = new ArrayList<Node>();
+    	
+    	//create path
+    	start();
+    	
+    	//done
+		return listOfPathTiles;
+	}
 
     /**
      * Start the algorithm
@@ -213,5 +226,6 @@ public class AStar {
         }
         return false;
     }
+
 }
 

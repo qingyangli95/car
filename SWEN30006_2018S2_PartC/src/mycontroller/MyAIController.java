@@ -13,6 +13,7 @@ import world.WorldSpatial;
 public class MyAIController extends CarController{
 	private HashMap<Coordinate,AugmentedMapTile> updatedMap; //most up to date view of the entire map
 	private LinkedList<Coordinate> currentPath; 
+	private IPathFinder pathFinder;
 
 	private final double EPS = 1e-7; //for floating point comparison
 	private final int LOW_HEALTH = 40; //arbitrary low point
@@ -25,6 +26,7 @@ public class MyAIController extends CarController{
 		super(car);
 		initMap();
 		setCurrentState(State.FINDING_KEYS);
+		pathFinder = new AStar(this);
 	}
 
 	@Override
@@ -33,13 +35,13 @@ public class MyAIController extends CarController{
 		updateState();
 		Coordinate destination = getCoordinate(updatedMap);
 		//try to get a path
-		currentPath = pathFinder(destination);
+		currentPath = pathFinder.getPath(destination);
 		while (currentPath.size() == 0) {
 			//couldn't find path, destination is bad
 			updatedMap.get(destination).setBlackListed(true);
 			//get new destination, find new route
 			destination = getCoordinate(updatedMap);
-			currentPath = pathFinder(destination);
+			currentPath = pathFinder.getPath(destination);
 		}
 		moveTowards(destination);
 	}
@@ -129,15 +131,6 @@ public class MyAIController extends CarController{
 		return updatedMap;
 	}
 
-	
-	/** Tries to find a path to a destination 
-	 */
-	private LinkedList<Coordinate> pathFinder(Coordinate destination) {
-		AStar pathFinding= new AStar(this, destination);
-		pathFinding.start();
-		return pathFinding.listOfPathTiles;
-	}
-	
 	/**
 	 * Need the current Position and destination
 	 * The path is legal for car to move along. Only need to move to next node in the path in this method.
@@ -156,12 +149,10 @@ public class MyAIController extends CarController{
 			applyBrake();
 			return;
 		}
+		
 		// move along the path
-		
 		nextPos = currentPath.getLast(); //path starts at destination, finishes at next coordinate
-		currentPath.removeLast();
 
-		
 		//first deal with stationary case
 		if (Math.abs(speed) < EPS) {
 			switch (orientation) {
