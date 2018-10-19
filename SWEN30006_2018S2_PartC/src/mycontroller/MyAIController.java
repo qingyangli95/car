@@ -121,12 +121,6 @@ public class MyAIController extends CarController{
 		return distance(currentCoord, point);
 	}
 
-	/** helper function to check whether we are on the same spot as a coordinate */
-	public boolean isLocatedAt(Coordinate coord) {
-		Coordinate ourCoord = new Coordinate(getPosition());
-		return ourCoord.equals(coord);
-	}
-
 	public HashMap<Coordinate, AugmentedMapTile> getUpdatedMap() {
 		return updatedMap;
 	}
