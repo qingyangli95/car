@@ -14,16 +14,23 @@ public class MyAIController extends CarController{
 	private HashMap<Coordinate,AugmentedMapTile> updatedMap; //most up to date view of the entire map
 	private LinkedList<Coordinate> currentPath; 
 
-	private final double EPS = 1e-7;
-
+	private final double EPS = 1e-7; //for floating point comparison
+	private final int LOW_HEALTH = 40; //arbitrary low point
+	private final int FULL_HEALTH = 100;
+	
+	public enum State {DEFAULT, FINDING_KEYS, FOUND_KEYS, HEALING};
+	private State currentState;
+	
 	public MyAIController(Car car) {
 		super(car);
 		initMap();
+		setCurrentState(State.FINDING_KEYS);
 	}
 
 	@Override
 	public void update() {
 		updateMap();
+		updateState();
 		Coordinate destination = getCoordinate(updatedMap);
 		//try to get a path
 		currentPath = pathFinder(destination);
@@ -38,11 +45,11 @@ public class MyAIController extends CarController{
 	}
 
 
-	private Coordinate getCoordinate(HashMap<Coordinate, AugmentedMapTile> map) {
+	private Coordinate getCoordinate(HashMap<Coordinate, AugmentedMapTile> updatedMap) {
 		LinkedList<Coordinate> tiles = new LinkedList<Coordinate>();
 
 		//insert coordinates
-		tiles.addAll(map.keySet());
+		tiles.addAll(updatedMap.keySet());
 
 		//prioritise unvisited tiles first, then use distance
 		tiles.sort(new Comparator<Coordinate>() {
@@ -53,8 +60,8 @@ public class MyAIController extends CarController{
 				double distanceToPoint1 = distanceFrom(point1);
 				double distanceToPoint2 = distanceFrom(point2);
 
-				boolean visitedPoint1 = map.get(point1).getVisited();
-				boolean visitedPoint2 = map.get(point2).getVisited();
+				boolean visitedPoint1 = updatedMap.get(point1).getVisited();
+				boolean visitedPoint2 = updatedMap.get(point2).getVisited();
 
 				//first case is either both visited/unvisited so sort by distance
 				if (!(visitedPoint1 || visitedPoint2) || (visitedPoint1 && visitedPoint2)) {
@@ -71,16 +78,33 @@ public class MyAIController extends CarController{
 
 		});
 
-		//use strategy pattern and concrete factory to select our tile
-		ITileSelector tileSelector = TileSelectorFactory.getInstance().getTileSelector(this);
-		Coordinate bestCoord = tileSelector.selectTile(tiles, this);
+		AugmentedMapTile tileInQuestion;
+		Coordinate bestCoord = null; 
+		//let Augmented tiles use their own strategy to work out whether we should take it
+		for (Coordinate coord : tiles) {
+			tileInQuestion = updatedMap.get(coord);
+			if (tileInQuestion instanceof Selectable && 
+					((Selectable)tileInQuestion).goodToSelect(this)) {
+				bestCoord = coord;
+				break;
+			}
+		}
 
 		//failed to select the most desirable tile, just go to default behaviour
 		if (bestCoord == null) {
-			tileSelector = TileSelectorFactory.getInstance().getDefaultTileSelector();
-			bestCoord = tileSelector.selectTile(tiles, this);
+			currentState = State.DEFAULT;
 		}
-
+		
+		//Refind appropriate tile, should always be something we can default to
+		for (Coordinate coord : tiles) {
+			tileInQuestion = updatedMap.get(coord);
+			if (tileInQuestion instanceof Selectable && 
+					((Selectable)tileInQuestion).goodToSelect(this)) {
+				bestCoord = coord;
+				break;
+			}
+		}
+		
 		return bestCoord;
 	}
 
@@ -135,7 +159,6 @@ public class MyAIController extends CarController{
 		// move along the path
 		
 		nextPos = currentPath.getLast(); //path starts at destination, finishes at next coordinate
-		System.out.println("next move: "+nextPos.x+","+nextPos.y);
 		currentPath.removeLast();
 
 		
@@ -178,7 +201,8 @@ public class MyAIController extends CarController{
 			if (safeToMoveForward()) {
 				applyForwardAcceleration();
 			} else {
-				applyReverseAcceleration(); // assume it's safe to move back then otherwise we can't win
+				// assume it's safe to move back then otherwise we can't win
+				applyReverseAcceleration(); 
 			}
 		}
 			
@@ -255,9 +279,10 @@ public class MyAIController extends CarController{
 		HashMap<Coordinate, MapTile> tempMap = getMap();
 		updatedMap = new HashMap<Coordinate, AugmentedMapTile>();
 		MapTile tempMapTile;
+		AugmentedTileFactory tileCreator = AugmentedTileFactory.getInstance();
 		for (Coordinate coord: tempMap.keySet()) {
 			tempMapTile = tempMap.get(coord);
-			AugmentedMapTile tempAugmentedMapTile = new AugmentedMapTile(tempMapTile);
+			AugmentedMapTile tempAugmentedMapTile = tileCreator.getAugmentedMapTile(tempMapTile);
 			updatedMap.put(coord, tempAugmentedMapTile);
 		}
 	
@@ -267,14 +292,36 @@ public class MyAIController extends CarController{
 	private void updateMap() {
 		HashMap<Coordinate, MapTile> view = getView();
 		for (Coordinate coord: view.keySet()) {
+			//factory pattern
+			AugmentedTileFactory tileCreator = AugmentedTileFactory.getInstance();
 			if (updatedMap.containsKey(coord)) {
-				updatedMap.get(coord).setTile(view.get(coord));
+				//add in correct type of augmented map tile
+				updatedMap.remove(coord);
+				updatedMap.put(coord, tileCreator.getAugmentedMapTile(view.get(coord)));
 				updatedMap.get(coord).setVisited(true);
 			}
 
 		}
 	}
-		
+	
+	/** updates the state of our controller */
+	private void updateState() {
+		MapTile currentTile = getMapTile();
+		//prioritise staying healthy! go to health tile if low or if still healing up		
+		if (getHealth() <= LOW_HEALTH || (currentTile.isType(Type.TRAP) && 
+				((TrapTile)currentTile).getTrap()=="health") && 
+				Math.abs(getHealth()-FULL_HEALTH) > EPS) {
+			setCurrentState(State.HEALING);		
+		} else if (getKeys().size() == numKeys()) {
+			//done with finding keys
+			setCurrentState(State.FOUND_KEYS);
+		} else { 		
+			//still need keys
+			setCurrentState(State.FINDING_KEYS);
+		}
+		return;
+	}
+	
 	/** helper function to establish whether it's safe to accelerate forward */
 	private boolean safeToMoveForward() {
 		Coordinate currentPos = new Coordinate(getPosition());
@@ -294,12 +341,11 @@ public class MyAIController extends CarController{
 				nextPos = new Coordinate(currentPos.x-1, currentPos.y);
 		}
 		
-		MapTile nextTile = updatedMap.get(nextPos).getTile();
-		if (nextTile.isType(Type.WALL) || 
-				(nextTile.isType(Type.TRAP) && ((TrapTile)nextTile).getTrap() == "mud")) {
-			return false;
-		} else {
+		if (updatedMap.get(nextPos) instanceof PathComponent &&
+				((PathComponent)updatedMap.get(nextPos)).isLegal()) {
 			return true;
+		} else {
+			return false;
 		}
 				
 	}
@@ -313,6 +359,7 @@ public class MyAIController extends CarController{
 		}
 	}
 	
+	
 	/** helper function to get current tile we're on */
 	public MapTile getMapTile() {
 		return updatedMap.get(new Coordinate(getPosition())).getTile();
@@ -325,4 +372,11 @@ public class MyAIController extends CarController{
 		return new Coordinate(getPosition());
 	}
 
+	public State getCurrentState() {
+		return currentState;
+	}
+
+	public void setCurrentState(State currentState) {
+		this.currentState = currentState;
+	}
 }

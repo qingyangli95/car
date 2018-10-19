@@ -7,8 +7,8 @@ public class Node implements Comparable<Node>
 
     public Coordinate coord; // å��æ ‡
     public Node parent; // çˆ¶ç»“ç‚¹
-    public int G; // Gï¼šæ˜¯ä¸ªå‡†ç¡®çš„å€¼ï¼Œæ˜¯èµ·ç‚¹åˆ°å½“å‰�ç»“ç‚¹çš„ä»£ä»·
-    public int H; // Hï¼šæ˜¯ä¸ªä¼°å€¼ï¼Œå½“å‰�ç»“ç‚¹åˆ°ç›®çš„ç»“ç‚¹çš„ä¼°è®¡ä»£ä»·
+    public int G; 
+    public int H; 
 
     public Node(int x, int y)
     {

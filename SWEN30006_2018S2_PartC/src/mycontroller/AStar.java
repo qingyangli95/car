@@ -1,9 +1,7 @@
 package mycontroller;
 
-import tiles.MapTile;
-import tiles.TrapTile;
 import utilities.Coordinate;
-import world.WorldSpatial;
+import world.WorldSpatial.Direction;
 
 import java.util.*;
 
@@ -14,24 +12,22 @@ import java.util.*;
  * @Description: AStar Path Finding
  */
 public class AStar {
-    public final static int DIRECT_VALUE = 10; // Cost For action
-    Queue<Node> openList = new PriorityQueue<>(); // ä¼˜å…ˆé˜Ÿåˆ—(å�‡åº�)
+    Queue<Node> openList = new PriorityQueue<>(); 
     List<Node> closeList = new ArrayList<>();
     LinkedList<Coordinate> listOfPathTiles = new LinkedList<>();
     Node startPos;
     Node destination;
-    WorldSpatial.Direction orientation;
+    Direction startOrientation;
     private HashMap<Coordinate, AugmentedMapTile> updatedMap;
+    MyAIController controller;
     
-    //private float speed;
     public AStar(MyAIController controller, Coordinate destination) {
-        // pass in the current position as starrPos, pass in the current updatedMap
-    	startPos = new Node(new Coordinate(controller.getPosition()));
+    	//initialise useful values
     	this.destination = new Node(destination);
-    	this.orientation = controller.getOrientation();
-        this.updatedMap = controller.getUpdatedMap();
-        //this.orientation = orientation;
-        // this.speed = speed;
+    	startPos = new Node(controller.getCoordinate());
+    	this.controller = controller;
+    	startOrientation = controller.getOrientation();
+    	updatedMap = controller.getUpdatedMap();
     }
 
     /**
@@ -56,6 +52,7 @@ public class AStar {
                 drawPath(destination);
                 break;
             }
+
             Node current = openList.poll();
             closeList.add(current);
             addNeighborNodeInOpen(current);
@@ -80,93 +77,47 @@ public class AStar {
      * Add all the neighbors to OpenList
      */
     private void addNeighborNodeInOpen(Node current) {
-        int x = current.coord.x;
+    	AugmentedMapTile currentTile = updatedMap.get(current.coord);
+    	//can't add if not a path component
+    	if (!(currentTile instanceof PathComponent)) {
+    		return;
+    	}
+    	int x = current.coord.x;
         int y = current.coord.y;
-        MapTile currentTile = updatedMap.get(current.coord).getTile();
-        if((currentTile.isType(MapTile.Type.TRAP) && ((TrapTile)currentTile).getTrap().equals("grass"))){
-        	if (current.parent == null) { //this is the first point
-        		//base the direction on current orientation of car
-        		switch (orientation) {
-        		case NORTH: 
-        		case SOUTH:
-        			addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
-        			addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
-        			break;
-        		case WEST:
-        		case EAST:
-        			addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
-                    addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
-                    break;
-        		}
-   
-        	//path away from starting point, base it on direction we came from
+        Direction currentOrientation;
+        if (current.parent == null) { //this is the first point
+        	currentOrientation = startOrientation;
+        } else {
+        	//assumption: car moving forward or backwards doesn't affect the directions
+        	//we can go to
+        	Coordinate parentCoord = current.parent.coord;
+        	if (Math.abs(parentCoord.y - y) > 0) { //we moved vertically
+        		currentOrientation = Direction.SOUTH; //or NORTH, but due to our assumption..
         	} else {
-        		if(current.parent.coord.x==current.coord.x){
-        			addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
-        			addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
-        		}
-        		else if (current.parent.coord.y==current.coord.y){
-        			addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
-        			addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
-        		}
+        		currentOrientation = Direction.EAST;
         	}
         }
-        else {
-            // west
-            addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
-            // north
-            addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
-            // east
-            addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
-            // south
-            addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
+        
+        
+        Direction[] directions = ((PathComponent)currentTile).movableDirections(currentOrientation);
+        int gValue = ((PathComponent)currentTile).getGScore(controller);
+        
+        for (Direction direction : directions) {
+        	switch (direction) {
+        	case NORTH:
+        		addNeighborNodeInOpen(current, x, y+1, gValue);
+        		break;
+        	case SOUTH:
+        		addNeighborNodeInOpen(current, x, y-1, gValue);
+        		break;
+        	case EAST:
+        		addNeighborNodeInOpen(current, x+1, y, gValue);
+        		break;
+        	case WEST: 
+        		addNeighborNodeInOpen(current, x-1, y, gValue);
+        		break;
+        	}
         }
-
-//        if(speed<=0){
-//            switch (orientation){
-//                case EAST:
-//                case WEST:
-//                    addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
-//                    addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
-//                case NORTH:
-//                case SOUTH:
-//                    addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
-//                    addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
-//            }
-//        }
-//
-//        else{
-//            switch (orientation){
-//                case EAST:
-//                    // north
-//                    addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
-//                    // east
-//                    addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
-//                    // south
-//                    addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
-//                case SOUTH:
-//                    // east
-//                    addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
-//                    // south
-//                    addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
-//                    // west
-//                    addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
-//                case NORTH:
-//                    // west
-//                    addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
-//                    // north
-//                    addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
-//                    // east
-//                    addNeighborNodeInOpen(current, x + 1, y, DIRECT_VALUE);
-//                case WEST:
-//                    // west
-//                    addNeighborNodeInOpen(current, x - 1, y, DIRECT_VALUE);
-//                    // north
-//                    addNeighborNodeInOpen(current, x, y - 1, DIRECT_VALUE);
-//                    // south
-//                    addNeighborNodeInOpen(current, x, y + 1, DIRECT_VALUE);
-//            }
-//        }
 
     }
 
@@ -175,10 +126,6 @@ public class AStar {
      * adding which neighbours
      */
     private void addNeighborNodeInOpen(Node current, int x, int y, int value) {
-    	MapTile currentTile = updatedMap.get(current.coord).getTile();
-    	if((currentTile.isType(MapTile.Type.TRAP) && ((TrapTile)currentTile).getTrap().equals("lava"))) {
-    		value += 50;
-    	}
         if (canAddNodeToOpen(x, y)) {
             Coordinate coord = new Coordinate(x, y);
             int G = current.G + value; // Calculate the G value of neighbors
@@ -238,25 +185,14 @@ public class AStar {
         // Whether the point is in map
         Coordinate point = new Coordinate(x, y);
         if (x < 0 || y < 0 || !updatedMap.containsKey(point)) return false;
-        // Need to add the type mud
-        if (!isLegal(point)) return false;
+        //must be a path component
+        AugmentedMapTile mapTile = updatedMap.get(point);
+        if (!(mapTile instanceof PathComponent)) return false;
+        //check whether we can add
+        if (!((PathComponent)mapTile).isLegal()) return false;
         // whether the point is in closeList
         return !isCoordInClose(x, y);
     }
-
-    /**
-     * Whether the coord is legal to visit
-     *  Wall, Mud are illegal
-     *  While speed = 0, left and right are illegal
-     *  While speed >0 backward is illegal
-     */
-    private boolean isLegal(Coordinate coord){
-        MapTile currentTile=updatedMap.get(coord).getTile();
-        if(currentTile.isType(MapTile.Type.WALL)) return false;
-        if((currentTile.isType(MapTile.Type.TRAP) && ((TrapTile)currentTile).getTrap().equals("mud"))) return false;
-        return true;
-        }
-
 
     /**
      * Whether the nodes are in close list

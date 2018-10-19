@@ -5,7 +5,7 @@ import tiles.MapTile;
 public class AugmentedMapTile {
 	/*This class stores a MapTile and a boolean holding whether its type is known to us. It is essentially a data
 	 structure. */
-	
+	public final int MOVE_SCORE = 1; //default cost to move kept in superclass
 	private MapTile tile;
 	private boolean visited;
 	private boolean blackListed;
