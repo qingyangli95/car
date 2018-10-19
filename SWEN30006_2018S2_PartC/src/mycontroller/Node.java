@@ -5,10 +5,10 @@ import utilities.Coordinate;
 public class Node implements Comparable<Node>
 {
 
-    public Coordinate coord; // å��æ ‡
-    public Node parent; // çˆ¶ç»“ç‚¹
-    public int G; 
-    public int H; 
+    public Coordinate coord; 
+    public Node parent; //where the node is connected from
+    public int G;  //cost to move from start to here
+    public int H;  // cost to move from here to destination
 
     public Node(int x, int y)
     {
@@ -28,6 +28,7 @@ public class Node implements Comparable<Node>
     }
 
     @Override
+    /** for use in priority queue */
     public int compareTo(Node o)
     {
         if (o == null) return -1;

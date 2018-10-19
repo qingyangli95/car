@@ -27,7 +27,7 @@ public class AStar implements IPathFinder {
     
     @Override
 	public LinkedList<Coordinate> getPath(Coordinate destination) {
-    	//initialise userful values
+    	//initialise useful values
     	this.destination = new Node(destination);
     	startOrientation = controller.getOrientation();
     	updatedMap = controller.getUpdatedMap();
@@ -51,7 +51,7 @@ public class AStar implements IPathFinder {
         // clean
         openList.clear();
         closeList.clear();
-        // å¼€å§‹æ�œç´¢
+        //add our spot to open list to begin
         openList.add(startPos);
         moveNodes();
     }
@@ -68,6 +68,7 @@ public class AStar implements IPathFinder {
 
             Node current = openList.poll();
             closeList.add(current);
+            //add all nodes that we can go to from current
             addNeighborNodeInOpen(current);
         }
     }
@@ -115,6 +116,7 @@ public class AStar implements IPathFinder {
         Direction[] directions = ((PathComponent)currentTile).movableDirections(currentOrientation);
         int gValue = ((PathComponent)currentTile).getGScore(controller);
         
+        //add in nodes from directions we can move to
         for (Direction direction : directions) {
         	switch (direction) {
         	case NORTH:
@@ -135,9 +137,7 @@ public class AStar implements IPathFinder {
     }
 
     /**
-     * Add one neighbor to OpenList, this handles more complicated logic and legality of 
-     * adding which neighbours
-     */
+     * Add one neighbor to OpenList, this handles scoring and legality of adding certain neighbours*/
     private void addNeighborNodeInOpen(Node current, int x, int y, int value) {
         if (canAddNodeToOpen(x, y)) {
             Coordinate coord = new Coordinate(x, y);

@@ -3,8 +3,6 @@ package mycontroller;
 import java.util.*;
 
 import tiles.MapTile;
-import tiles.MapTile.Type;
-import tiles.TrapTile;
 import utilities.Coordinate;
 import controller.CarController;
 import world.Car;
@@ -46,7 +44,7 @@ public class MyAIController extends CarController{
 		moveTowards(destination);
 	}
 
-
+	/** Uses an up to date map of the world to select the best coordinate to head towards */
 	private Coordinate getCoordinate(HashMap<Coordinate, AugmentedMapTile> updatedMap) {
 		LinkedList<Coordinate> tiles = new LinkedList<Coordinate>();
 
@@ -110,9 +108,9 @@ public class MyAIController extends CarController{
 		return bestCoord;
 	}
 
-	/** helper function to calculate simple Euclidean distance between coordinates */
+	/** helper function to calculate Manhattan distance between coordinates */
 	private double distance(Coordinate point1, Coordinate point2) {
-		return Math.sqrt(Math.pow(point1.x-point2.x, 2) + Math.pow(point1.y-point2.y, 2));
+		return Math.abs(point1.x - point2.x) + Math.abs(point1.y - point2.y);
 	}
 
 	/** helper function to calculate distance from car to a point */
@@ -183,14 +181,8 @@ public class MyAIController extends CarController{
 					tryToMove(); //need to turn but need some speed first
 				}
 			}
-			if (safeToMoveForward()) {
-				applyForwardAcceleration();
-			} else {
-				// assume it's safe to move back then otherwise we can't win
-				applyReverseAcceleration(); 
-			}
 		}
-			
+		
 		//deal with moving case
 		if (currentPos.y < nextPos.y) {
 			switch (orientation) {
@@ -258,15 +250,16 @@ public class MyAIController extends CarController{
 		}
 	}
 
-	//initialises the map by putting all of the tiles into AugmentedMapTiles which
-	//* just have a boolean value attached to each tile to make path finding easier */
+	//initialises the map by putting all of the tiles into AugmentedMapTiles (indirect object) */
 	private void initMap() {
 		HashMap<Coordinate, MapTile> tempMap = getMap();
 		updatedMap = new HashMap<Coordinate, AugmentedMapTile>();
 		MapTile tempMapTile;
+		//singleton factory pattern
 		AugmentedTileFactory tileCreator = AugmentedTileFactory.getInstance();
 		for (Coordinate coord: tempMap.keySet()) {
 			tempMapTile = tempMap.get(coord);
+			//convert to indirect object for us to use
 			AugmentedMapTile tempAugmentedMapTile = tileCreator.getAugmentedMapTile(tempMapTile);
 			updatedMap.put(coord, tempAugmentedMapTile);
 		}
@@ -291,11 +284,9 @@ public class MyAIController extends CarController{
 	
 	/** updates the state of our controller */
 	private void updateState() {
-		MapTile currentTile = getMapTile();
-		//prioritise staying healthy! go to health tile if low or if still healing up		
-		if (getHealth() <= LOW_HEALTH || (currentTile.isType(Type.TRAP) && 
-				((TrapTile)currentTile).getTrap()=="health") && 
-				Math.abs(getHealth()-FULL_HEALTH) > EPS) {
+		//prioritise staying healthy! heal up if low and stay on until full	
+		if (getHealth() <= LOW_HEALTH || (currentState==State.HEALING && 
+				(Math.abs(getHealth()-FULL_HEALTH) > EPS))) {
 			setCurrentState(State.HEALING);		
 		} else if (getKeys().size() == numKeys()) {
 			//done with finding keys
@@ -346,8 +337,8 @@ public class MyAIController extends CarController{
 	
 	
 	/** helper function to get current tile we're on */
-	public MapTile getMapTile() {
-		return updatedMap.get(new Coordinate(getPosition())).getTile();
+	public AugmentedMapTile getAugmentedMapTile() {
+		return updatedMap.get(getCoordinate());
 	}
 	
 	/** helper function to get current coordinate
