@@ -5,7 +5,7 @@ import tiles.LavaTrap;
 import tiles.MapTile;
 
 public class AugmentedLavaTile extends AugmentedTrapTile {
-	public final int SCORE_SCALE = 400; //increase this if safety is of more importance
+	public final int SCORE_SCALE = 500; //increase this if safety is of more importance
 	
 	public AugmentedLavaTile(MapTile tile) {
 		super(tile);

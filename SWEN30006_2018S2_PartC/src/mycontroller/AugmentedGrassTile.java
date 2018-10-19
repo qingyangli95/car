@@ -1,6 +1,5 @@
 package mycontroller;
 
-import mycontroller.MyAIController.State;
 import tiles.MapTile;
 import world.WorldSpatial.Direction;
 
@@ -8,20 +7,6 @@ public class AugmentedGrassTile extends AugmentedTrapTile {
 
 	public AugmentedGrassTile(MapTile tile) {
 		super(tile);
-	}
-
-	@Override
-	public boolean goodToSelect(MyAIController controller) {
-		//check if blacklisted
-		if (getBlackListed()) {
-			return false;
-		}
-		State condition = controller.getCurrentState();
-		if (condition == State.DEFAULT) {
-			return true;
-		} else {
-			return false;
-		}
 	}
 	
 	public Direction[] movableDirections(Direction currentOrientation) {

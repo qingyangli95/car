@@ -14,7 +14,8 @@ public class MyAIController extends CarController{
 	private IPathFinder pathFinder;
 
 	private final double EPS = 1e-7; //for floating point comparison
-	private final int LOW_HEALTH = 40; //arbitrary low point
+	private final int LOW_HEALTH = 50; //arbitrary low point
+	public final int MAX_HEALTH = 100;
 	private float lastHealth; //to check whether we're healing from some source
 	
 	public enum State {DEFAULT, FINDING_KEYS, FOUND_KEYS, HEALING};
@@ -32,21 +33,21 @@ public class MyAIController extends CarController{
 	public void update() {
 		updateMap();
 		updateState();
-		Coordinate destination = getCoordinate(updatedMap);
+		Coordinate destination = getDestCoordinate(updatedMap);
 		//try to get a path
 		currentPath = pathFinder.getPath(destination);
 		while (currentPath.size() == 0) {
 			//couldn't find path, destination is bad
 			updatedMap.get(destination).setBlackListed(true);
 			//get new destination, find new route
-			destination = getCoordinate(updatedMap);
+			destination = getDestCoordinate(updatedMap);
 			currentPath = pathFinder.getPath(destination);
 		}
 		moveTowards(destination);
 	}
 
 	/** Uses an up to date map of the world to select the best coordinate to head towards */
-	private Coordinate getCoordinate(HashMap<Coordinate, AugmentedMapTile> updatedMap) {
+	private Coordinate getDestCoordinate(HashMap<Coordinate, AugmentedMapTile> updatedMap) {
 		LinkedList<Coordinate> tiles = new LinkedList<Coordinate>();
 
 		//insert coordinates

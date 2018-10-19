@@ -27,6 +27,10 @@ public class AStar implements IPathFinder {
     
     @Override
 	public LinkedList<Coordinate> getPath(Coordinate destination) {
+    	if (destination == null) {
+    		//empty path
+    		return new LinkedList<Coordinate>();
+    	}
     	//initialise useful values
     	this.destination = new Node(destination);
     	startOrientation = controller.getOrientation();
@@ -231,8 +235,8 @@ public class AStar implements IPathFinder {
         return false;
     }
     
-    /** if a path causes us to lose more than half our health, we reject it, since we want 
-     * to be able to go to the destination and come out healthy */
+    /** if a path causes us to lose more than our half max health, we reject it, 
+     * we need to be able to return safely too */
     private boolean safePath() {
     	float healthLoss = 0;
     	for (Coordinate coord: listOfPathTiles) {
@@ -241,7 +245,7 @@ public class AStar implements IPathFinder {
     		if (tile instanceof PathComponent) {
     			healthLoss += ((PathComponent)tile).getHealthScore();
     		}
-    		if (Math.abs(healthLoss) > controller.getHealth()/2) {
+    		if (Math.abs(healthLoss) >= controller.MAX_HEALTH/2) {
     			return false;
     		}
     	}

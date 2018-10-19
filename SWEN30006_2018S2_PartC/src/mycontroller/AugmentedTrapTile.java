@@ -1,5 +1,6 @@
 package mycontroller;
 
+import mycontroller.MyAIController.State;
 import tiles.MapTile;
 import world.WorldSpatial.Direction;
 
@@ -11,6 +12,20 @@ public abstract class AugmentedTrapTile extends AugmentedMapTile implements Sele
 
 	public boolean isLegal() {
 		return true;
+	}
+	
+	//just exploring, good to select if not black listed
+	public boolean goodToSelect(MyAIController controller) {
+		//check if blacklisted
+		if (getBlackListed()) {
+			return false;
+		}
+		State condition = controller.getCurrentState();
+		if (condition == State.DEFAULT) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 	
 	public int getGScore(MyAIController controller) {
