@@ -9,4 +9,6 @@ public interface PathComponent {
 	public int getGScore(MyAIController controller); //cost to move 
 	 //directions we can move in from a spot
 	public WorldSpatial.Direction[] movableDirections(Direction currentOrientation);
+	//how a path component affects our health
+	public float getHealthScore();
 }

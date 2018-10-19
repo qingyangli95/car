@@ -15,7 +15,7 @@ public class MyAIController extends CarController{
 
 	private final double EPS = 1e-7; //for floating point comparison
 	private final int LOW_HEALTH = 40; //arbitrary low point
-	private final int FULL_HEALTH = 100;
+	private float lastHealth; //to check whether we're healing from some source
 	
 	public enum State {DEFAULT, FINDING_KEYS, FOUND_KEYS, HEALING};
 	private State currentState;
@@ -25,6 +25,7 @@ public class MyAIController extends CarController{
 		initMap();
 		setCurrentState(State.FINDING_KEYS);
 		pathFinder = new AStar(this);
+		lastHealth = getHealth();
 	}
 
 	@Override
@@ -284,9 +285,8 @@ public class MyAIController extends CarController{
 	
 	/** updates the state of our controller */
 	private void updateState() {
-		//prioritise staying healthy! heal up if low and stay on until full	
-		if (getHealth() <= LOW_HEALTH || (currentState==State.HEALING && 
-				(Math.abs(getHealth()-FULL_HEALTH) > EPS))) {
+		//prioritise staying healthy! if we just got healed by something, stay there, probably good
+		if (getHealth() <= LOW_HEALTH || lastHealth < getHealth()) {
 			setCurrentState(State.HEALING);		
 		} else if (getKeys().size() == numKeys()) {
 			//done with finding keys
@@ -295,6 +295,7 @@ public class MyAIController extends CarController{
 			//still need keys
 			setCurrentState(State.FINDING_KEYS);
 		}
+		lastHealth = getHealth(); //update health condition
 		return;
 	}
 	
@@ -355,4 +356,5 @@ public class MyAIController extends CarController{
 	public void setCurrentState(State currentState) {
 		this.currentState = currentState;
 	}
+	
 }

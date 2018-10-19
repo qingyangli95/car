@@ -40,4 +40,9 @@ public class AugmentedFinishTile extends AugmentedMapTile implements Selectable,
 		}
 	}
 
+	@Override
+	public float getHealthScore() {
+		return HEALTH_IMPACT;
+	}
+
 }

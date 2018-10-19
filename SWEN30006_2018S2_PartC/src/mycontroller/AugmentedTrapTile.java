@@ -21,5 +21,9 @@ public abstract class AugmentedTrapTile extends AugmentedMapTile implements Sele
 		Direction[] directions = {Direction.SOUTH, Direction.WEST, Direction.NORTH, Direction.EAST};
 		return directions;
 	}
+	
+	public float getHealthScore() {
+		return HEALTH_IMPACT;
+	}
 
 }

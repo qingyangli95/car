@@ -38,4 +38,9 @@ public class AugmentedRoadTile extends AugmentedMapTile implements Selectable, P
 		}
 	}
 
+	@Override
+	public float getHealthScore() {
+		return HEALTH_IMPACT;
+	}
+
 }

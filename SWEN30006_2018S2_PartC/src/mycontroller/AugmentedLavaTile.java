@@ -5,7 +5,7 @@ import tiles.LavaTrap;
 import tiles.MapTile;
 
 public class AugmentedLavaTile extends AugmentedTrapTile {
-	public final int SCORE_SCALE = 400;
+	public final int SCORE_SCALE = 400; //increase this if safety is of more importance
 	
 	public AugmentedLavaTile(MapTile tile) {
 		super(tile);
@@ -32,6 +32,9 @@ public class AugmentedLavaTile extends AugmentedTrapTile {
 		//inversely proportional to the amount of health we have
 		return (int)(SCORE_SCALE/controller.getHealth());
 	}
-
+	
+	public float getHealthScore() {
+		return (float) (-LavaTrap.HealthDelta*DELTA_SCALE);
+	}
 
 }

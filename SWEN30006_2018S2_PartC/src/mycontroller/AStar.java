@@ -20,7 +20,7 @@ public class AStar implements IPathFinder {
     Direction startOrientation;
     private HashMap<Coordinate, AugmentedMapTile> updatedMap;
     MyAIController controller;
-    
+
     public AStar(MyAIController controller) {
     	this.controller = controller;
     }
@@ -36,9 +36,13 @@ public class AStar implements IPathFinder {
     	openList = new PriorityQueue<Node>();
     	closeList = new ArrayList<Node>();
     	
-    	//create path
+    	//create best path
     	start();
     	
+    	//considered danger of tiles but still path may not be safe enough
+    	if (!safePath()) {
+    		listOfPathTiles.clear();
+    	}
     	//done
 		return listOfPathTiles;
 	}
@@ -225,6 +229,23 @@ public class AStar implements IPathFinder {
             }
         }
         return false;
+    }
+    
+    /** if a path causes us to lose more than half our health, we reject it, since we want 
+     * to be able to go to the destination and come out healthy */
+    private boolean safePath() {
+    	float healthLoss = 0;
+    	for (Coordinate coord: listOfPathTiles) {
+    		AugmentedMapTile tile = updatedMap.get(coord);
+    		//accumulate health loss from path
+    		if (tile instanceof PathComponent) {
+    			healthLoss += ((PathComponent)tile).getHealthScore();
+    		}
+    		if (Math.abs(healthLoss) > controller.getHealth()/2) {
+    			return false;
+    		}
+    	}
+    	return true;
     }
 
 }

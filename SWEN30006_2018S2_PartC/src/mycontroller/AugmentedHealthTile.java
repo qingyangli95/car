@@ -1,6 +1,7 @@
 package mycontroller;
 
 import mycontroller.MyAIController.State;
+import tiles.HealthTrap;
 import tiles.MapTile;
 
 public class AugmentedHealthTile extends AugmentedTrapTile {
@@ -21,6 +22,10 @@ public class AugmentedHealthTile extends AugmentedTrapTile {
 		} else {
 			return false;
 		}
+	}
+
+	public float getHealthImpact() {
+		return (float) (HealthTrap.HealthDelta*DELTA_SCALE);
 	}
 
 }
